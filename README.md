@@ -9,7 +9,7 @@ Responsive React and TypeScript authentication UI using Redux Toolkit, React Rou
 3. Copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL`.
 4. Run `npm run dev`.
 
-Set `VITE_AUTH_MODE=mock` in `.env.local` to explore the interface without a backend. Demo mode stores demo accounts in the current browser tab session and requires the same email and password used during registration. This client-side demo is not secure production authentication. Do not use real passwords or deploy it for real users.
+Set `VITE_AUTH_MODE=mock` in `.env.local` to explore the interface without a backend. Demo mode auto-verifies registrations because it does not send email, stores demo accounts in the current browser tab session, and requires the same email and password used during registration. This client-side demo is not secure production authentication. Do not use real passwords or deploy it for real users.
 
 ## Checks
 

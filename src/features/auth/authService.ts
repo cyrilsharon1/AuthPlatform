@@ -7,11 +7,20 @@ const demoEnabled = import.meta.env.VITE_AUTH_MODE === 'mock'
 interface DemoAccount { user: User; passwordHash: string }
 function demoUser(): User | null {
   if (!demoEnabled) return null
-  try { return JSON.parse(sessionStorage.getItem(demoKey) ?? 'null') as User | null } catch { return null }
+  try {
+    const user = JSON.parse(sessionStorage.getItem(demoKey) ?? 'null') as User | null
+    if (!user) return null
+    const verifiedUser = { ...user, emailVerified: true }
+    if (!user.emailVerified) saveDemo(verifiedUser)
+    return verifiedUser
+  } catch { return null }
 }
 function saveDemo(user: User | null) { if (user) sessionStorage.setItem(demoKey, JSON.stringify(user)); else sessionStorage.removeItem(demoKey) }
 function demoAccounts(): DemoAccount[] {
-  try { return JSON.parse(sessionStorage.getItem(demoAccountsKey) ?? '[]') as DemoAccount[] } catch { return [] }
+  try {
+    const accounts = JSON.parse(sessionStorage.getItem(demoAccountsKey) ?? '[]') as DemoAccount[]
+    return accounts.map(account => ({ ...account, user: { ...account.user, emailVerified: true } }))
+  } catch { return [] }
 }
 async function hashDemoPassword(password: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password))
@@ -37,7 +46,7 @@ export const authService = {
       const email = input.email.trim()
       const accounts = demoAccounts()
       if (accounts.some(item => item.user.email.toLowerCase() === email.toLowerCase())) throw new Error('An account with this email already exists. Sign in instead.')
-      const user = { id: crypto.randomUUID(), fullName: input.fullName.trim(), email, emailVerified: false }
+      const user = { id: crypto.randomUUID(), fullName: input.fullName.trim(), email, emailVerified: true }
       accounts.push({ user, passwordHash: await hashDemoPassword(input.password) })
       sessionStorage.setItem(demoAccountsKey, JSON.stringify(accounts))
       saveDemo(user)
