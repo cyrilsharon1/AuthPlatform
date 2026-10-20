@@ -9,7 +9,7 @@ export const restoreSession = createAsyncThunk<User>('auth/restore', () => authS
 export const login = createAsyncThunk<User, Credentials>('auth/login', async (input, { rejectWithValue }) => { try { return await authService.login(input) } catch (e) { return rejectWithValue(failure(e)) } })
 export const register = createAsyncThunk<User, RegistrationInput>('auth/register', async (input, { rejectWithValue }) => { try { return await authService.register(input) } catch (e) { return rejectWithValue(failure(e)) } })
 export const logout = createAsyncThunk<void>('auth/logout', () => authService.logout())
-export const requestPasswordReset = createAsyncThunk<void, string>('auth/forgot', async (email, { rejectWithValue }) => { try { await authService.forgotPassword(email) } catch (e) { return rejectWithValue(failure(e)) } })
+export const requestPasswordReset = createAsyncThunk<string | undefined, string>('auth/forgot', async (email, { rejectWithValue }) => { try { return await authService.forgotPassword(email) } catch (e) { return rejectWithValue(failure(e)) } })
 export const confirmPasswordReset = createAsyncThunk<void, { token: string; password: string }>('auth/reset', async (input, { rejectWithValue }) => { try { await authService.resetPassword(input.token, input.password) } catch (e) { return rejectWithValue(failure(e)) } })
 export const resendVerification = createAsyncThunk<void, string>('auth/resend', async (email, { rejectWithValue }) => { try { await authService.resendVerification(email) } catch (e) { return rejectWithValue(failure(e)) } })
 export const verifyEmail = createAsyncThunk<void, string>('auth/verify', async (token, { rejectWithValue }) => { try { await authService.verifyEmail(token) } catch (e) { return rejectWithValue(failure(e)) } })

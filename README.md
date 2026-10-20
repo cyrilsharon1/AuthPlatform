@@ -1,25 +1,31 @@
-# CV Foods Authentication Platform
+# CV Foods Authentication and Ordering Demo
 
-Responsive React and TypeScript authentication UI using Redux Toolkit, React Router, React Hook Form, Zod, and a cookie based API adapter.
+A React and TypeScript customer app for CV Foods. It includes account registration and sign in, demo password recovery, a 100-item Nigerian menu, a persistent shopping bag, pay-on-delivery demo checkout, and order history.
 
 ## Run locally
 
 1. Install Node.js 20.19 or newer.
 2. Run `npm install`.
-3. Copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL`.
+3. Set `VITE_AUTH_MODE=mock` in `.env.local` for the no-backend demo (already configured for this project).
 4. Run `npm run dev`.
 
-Set `VITE_AUTH_MODE=mock` in `.env.local` to explore the interface without a backend. Demo mode auto-verifies registrations because it does not send email, stores demo accounts in the current browser tab session, and requires the same email and password used during registration. This client-side demo is not secure production authentication. Do not use real passwords or deploy it for real users.
+Create an account, add dishes to the bag, continue to checkout, enter delivery details, and place a demo order. Sign out and back in with the same account to see its order history. Demo accounts, bag contents, reset links, and orders are stored in this browser using local storage. A demo password-reset link appears in the app because no email service is connected.
+
+This is a front-end demonstration. It does not charge payment, send email, notify a restaurant, or provide live delivery updates. Do not use real passwords or customer data. For real customers, replace mock mode with a secure backend, database, email provider, and payment integration.
+
+## Render static demo
+
+`render.yaml` sets `VITE_AUTH_MODE=mock`, publishes `dist`, and rewrites application routes to `index.html`.
 
 ## Checks
 
-- `npm run build` — type-checks app and Vite config, then builds production assets.
-- `npm run lint` — ESLint.
-- `npm test` — validation, auth state, and password visibility tests.
+- `npm run build` type-checks the app and builds production assets.
+- `npm run lint` runs ESLint.
+- `npm test` runs the unit tests.
 
 ## Backend API contract
 
-All paths are relative to `VITE_API_BASE_URL`. The client sends JSON with `credentials: include`. Auth responses return `{ user: { id, fullName, email, emailVerified } }`; errors may return `{ message }`.
+When mock mode is disabled, the client expects an API at `VITE_API_BASE_URL`. It sends JSON with credentialed requests. Auth responses return `{ user: { id, fullName, email, emailVerified } }`; errors may return `{ message }`.
 
 | Method | Endpoint | Request | Success |
 | --- | --- | --- | --- |
@@ -32,16 +38,4 @@ All paths are relative to `VITE_API_BASE_URL`. The client sends JSON with `crede
 | POST | `/auth/verify-email` | `{ token }` | 204 |
 | POST | `/auth/verify-email/resend` | `{ email }` | 204 |
 
-The backend must hash passwords, enforce authorization, expire sessions, issue single-use expiring reset and verification tokens, throttle resend requests, protect cookie flows against CSRF, and configure credentialed CORS. The frontend stores no passwords or session tokens in Redux or browser storage.
-
-Dashboard menu and order panels are previews and are not connected to ordering services. Food photography loads from Unsplash.
-
-## Project map
-
-- `src/app`: Redux store and typed hooks.
-- `src/features/auth`: service, slice, types, and validation.
-- `src/components`: shared form, layout, and routing UI.
-- `src/pages`: authentication flows and protected dashboard.
-- `src/styles`: palette tokens and responsive styles.
-
-
+A production backend must hash passwords, authorize access to orders, persist orders, expire sessions, issue single-use reset and verification tokens, throttle resend requests, protect cookie flows against CSRF, and configure credentialed CORS.

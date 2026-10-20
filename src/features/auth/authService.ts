@@ -5,20 +5,21 @@ const demoKey = 'cv-foods-demo-user'
 const demoAccountsKey = 'cv-foods-demo-accounts'
 const demoEnabled = import.meta.env.VITE_AUTH_MODE === 'mock'
 interface DemoAccount { user: User; passwordHash: string }
+interface ResetToken { email: string; expiresAt: number }
 function demoUser(): User | null {
   if (!demoEnabled) return null
   try {
-    const user = JSON.parse(sessionStorage.getItem(demoKey) ?? 'null') as User | null
+    const user = JSON.parse(localStorage.getItem(demoKey) ?? 'null') as User | null
     if (!user) return null
     const verifiedUser = { ...user, emailVerified: true }
     if (!user.emailVerified) saveDemo(verifiedUser)
     return verifiedUser
   } catch { return null }
 }
-function saveDemo(user: User | null) { if (user) sessionStorage.setItem(demoKey, JSON.stringify(user)); else sessionStorage.removeItem(demoKey) }
+function saveDemo(user: User | null) { if (user) localStorage.setItem(demoKey, JSON.stringify(user)); else localStorage.removeItem(demoKey) }
 function demoAccounts(): DemoAccount[] {
   try {
-    const accounts = JSON.parse(sessionStorage.getItem(demoAccountsKey) ?? '[]') as DemoAccount[]
+    const accounts = JSON.parse(localStorage.getItem(demoAccountsKey) ?? '[]') as DemoAccount[]
     return accounts.map(account => ({ ...account, user: { ...account.user, emailVerified: true } }))
   } catch { return [] }
 }
@@ -34,12 +35,10 @@ export const authService = {
   async login(input: Credentials): Promise<User> {
     if (demoEnabled) {
       const account = demoAccounts().find(item => item.user.email.toLowerCase() === input.email.trim().toLowerCase())
-      if (!account || account.passwordHash !== await hashDemoPassword(input.password)) {
-        throw new Error('Wrong email or password. If you are new to CV Foods, create an account.')
-      }
+      if (!account || account.passwordHash !== await hashDemoPassword(input.password)) throw new Error('Wrong email or password. If you are new to CV Foods, create an account.')
       saveDemo(account.user); return account.user
     }
-    const result = await apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(input) }); return result.user
+    return (await apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(input) })).user
   },
   async register(input: RegistrationInput): Promise<User> {
     if (demoEnabled) {
@@ -48,15 +47,42 @@ export const authService = {
       if (accounts.some(item => item.user.email.toLowerCase() === email.toLowerCase())) throw new Error('An account with this email already exists. Sign in instead.')
       const user = { id: crypto.randomUUID(), fullName: input.fullName.trim(), email, emailVerified: true }
       accounts.push({ user, passwordHash: await hashDemoPassword(input.password) })
-      sessionStorage.setItem(demoAccountsKey, JSON.stringify(accounts))
-      saveDemo(user)
-      return user
+      localStorage.setItem(demoAccountsKey, JSON.stringify(accounts)); saveDemo(user); return user
     }
-    const result = await apiRequest<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(input) }); return result.user
+    return (await apiRequest<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(input) })).user
   },
   async logout(): Promise<void> { if (demoEnabled) { saveDemo(null); return } await apiRequest<void>('/auth/logout', { method: 'POST' }) },
-  async forgotPassword(email: string): Promise<void> { await apiRequest<void>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }) },
-  async resetPassword(token: string, password: string): Promise<void> { await apiRequest<void>('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }) },
-  async resendVerification(email: string): Promise<void> { await apiRequest<void>('/auth/verify-email/resend', { method: 'POST', body: JSON.stringify({ email }) }) },
-  async verifyEmail(token: string): Promise<void> { await apiRequest<void>('/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) }) },
+  async forgotPassword(email: string): Promise<string | undefined> {
+    if (demoEnabled) {
+      const account = demoAccounts().find(item => item.user.email.toLowerCase() === email.trim().toLowerCase())
+      if (!account) return undefined
+      const token = crypto.randomUUID()
+      localStorage.setItem(`cv-foods-demo-reset:${token}`, JSON.stringify({ email: account.user.email, expiresAt: Date.now() + 30 * 60 * 1000 } satisfies ResetToken))
+      return `/reset-password?token=${encodeURIComponent(token)}`
+    }
+    await apiRequest<void>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) })
+    return undefined
+  },
+  async resetPassword(token: string, password: string): Promise<void> {
+    if (demoEnabled) {
+      const key = `cv-foods-demo-reset:${token}`
+      let reset: ResetToken | null = null
+      try { reset = JSON.parse(localStorage.getItem(key) ?? 'null') as ResetToken | null } catch { /* malformed demo token */ }
+      if (!reset || reset.expiresAt < Date.now()) { localStorage.removeItem(key); throw new Error('This reset link has expired. Request a new one.') }
+      const accounts = demoAccounts()
+      const account = accounts.find(item => item.user.email.toLowerCase() === reset?.email.toLowerCase())
+      if (!account) { localStorage.removeItem(key); throw new Error('We could not find that account. Create a new account to continue.') }
+      account.passwordHash = await hashDemoPassword(password)
+      localStorage.setItem(demoAccountsKey, JSON.stringify(accounts)); localStorage.removeItem(key); return
+    }
+    await apiRequest<void>('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) })
+  },
+  async resendVerification(email: string): Promise<void> {
+    if (demoEnabled) { if (!demoAccounts().some(item => item.user.email.toLowerCase() === email.trim().toLowerCase())) throw new Error('We could not find an account for that email. Create an account to continue.'); return }
+    await apiRequest<void>('/auth/verify-email/resend', { method: 'POST', body: JSON.stringify({ email }) })
+  },
+  async verifyEmail(token: string): Promise<void> {
+    if (demoEnabled) { if (!token) throw new Error('This verification link is missing or invalid.'); return }
+    await apiRequest<void>('/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) })
+  },
 }
