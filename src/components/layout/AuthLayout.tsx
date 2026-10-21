@@ -1,7 +1,93 @@
-import type { ReactNode } from 'react'
-import { ArrowUpRight, Clock3 } from 'lucide-react'
-import { BrandLogo } from '../common/BrandLogo'
-interface Props { children: ReactNode; eyebrow: string; title: string; description: string; compact?: boolean }
-export function AuthLayout({ children, eyebrow, title, description, compact = false }: Props) {
-  return <main className="auth-shell"><section className="form-side"><div className="form-top"><BrandLogo /><span className="top-note">Need a hand? <a href="mailto:hello@cvfoods.example">Talk to us</a></span></div><div className={`auth-content ${compact ? 'compact' : ''}`}><div className="mobile-brand"><BrandLogo /></div><div className="auth-heading"><span className="eyebrow"><i />{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{children}</div><footer className="auth-footer"><span>© 2026 CV Foods</span><span><a href="#privacy">Privacy</a><a href="#terms">Terms</a></span></footer></section><aside className="hero-side"><div className="hero-image"/><div className="hero-shade"/><div className="hero-content"><div className="hero-top"><span className="hero-pill"><i/> FRESHLY MADE, ALWAYS</span><span className="hero-location">Lagos · Nigeria</span></div><div className="hero-copy"><div className="hero-index">A BETTER KIND OF TAKEOUT <span>01 / 03</span></div><h2>A little joy,<br/><em>delivered.</em></h2><p>Big flavours, fresh ingredients, and the comfort of knowing dinner is already handled.</p><a className="hero-link" href="/register">Discover your new favourite <ArrowUpRight size={16}/></a></div><div className="hero-bottom"><div className="dish-card"><div className="dish-thumb"/><span><strong>Tonight, sorted.</strong><small><Clock3 size={12}/> Made fresh in 25 min</small></span><b>₦</b></div><span className="hero-caption">REAL FOOD. REAL GOOD.</span></div></div></aside></main>
+import type { ReactNode } from "react";
+import { ArrowUpRight, Clock3 } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
+interface Props {
+  children: ReactNode;
+  eyebrow: string;
+  title: string;
+  description: string;
+  compact?: boolean;
+}
+export function AuthLayout({
+  children,
+  eyebrow,
+  title,
+  description,
+  compact = false,
+}: Props) {
+  return (
+    <main className="auth-shell">
+      <section className="form-side">
+        <div className="form-top">
+          <BrandLogo />
+          <span className="top-note">
+            Need a hand? <a href="mailto:hello@cvfoods.example">Talk to us</a>
+          </span>
+        </div>
+        <div className={`auth-content ${compact ? "compact" : ""}`}>
+          <div className="mobile-brand">
+            <BrandLogo />
+          </div>
+          <div className="auth-heading">
+            <span className="eyebrow">
+              <i />
+              {eyebrow}
+            </span>
+            <h1>{title}</h1>
+            <p>{description}</p>
+          </div>
+          {children}
+        </div>
+        <footer className="auth-footer">
+          <span>© 2026 CV Foods</span>
+          <span>
+            <a href="#privacy">Privacy</a>
+            <a href="#terms">Terms</a>
+          </span>
+        </footer>
+      </section>
+      <aside className="hero-side">
+        <div className="hero-image" />
+        <div className="hero-shade" />
+        <div className="hero-content">
+          <div className="hero-top">
+            <span className="hero-pill">
+              <i /> FRESHLY MADE, ALWAYS
+            </span>
+            <span className="hero-location">Lagos · Nigeria</span>
+          </div>
+          <div className="hero-copy">
+            <div className="hero-index">
+              A BETTER KIND OF TAKEOUT <span>01 / 03</span>
+            </div>
+            <h2>
+              A little joy,
+              <br />
+              <em>delivered.</em>
+            </h2>
+            <p>
+              Big flavours, fresh ingredients, and the comfort of knowing dinner
+              is already handled.
+            </p>
+            <a className="hero-link" href="/register">
+              Discover your new favourite <ArrowUpRight size={16} />
+            </a>
+          </div>
+          <div className="hero-bottom">
+            <div className="dish-card">
+              <div className="dish-thumb" />
+              <span>
+                <strong>Tonight, sorted.</strong>
+                <small>
+                  <Clock3 size={12} /> Made fresh in 25 min
+                </small>
+              </span>
+              <b>₦</b>
+            </div>
+            <span className="hero-caption">REAL FOOD. REAL GOOD.</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+  );
 }
